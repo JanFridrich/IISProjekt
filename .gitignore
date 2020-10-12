@@ -1,1 +1,6 @@
 app/config/local.neon
+.idea/
+log/
+temp/
+tests/
+vendor/

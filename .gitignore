@@ -3,4 +3,3 @@ app/config/local.neon
 log/
 temp/
 tests/
-vendor/

@@ -16,9 +16,9 @@ session:
 
 
 database:
-	dsn: 'mysql:host=127.0.0.1;dbname=test'
-	user:
-	password:
+	dsn: 'mysql:host=innodb.endora.cz;dbname=dlembo1602504698'
+	user: dlembo1602504698
+	password: D4aaZhVZ
 	options:
 		lazy: yes
 
@@ -26,6 +26,8 @@ database:
 services:
 	- App\Model\UserManager
 	- App\Forms\FormFactory
-	- App\Forms\SignInFormFactory
-	- App\Forms\SignUpFormFactory
+	- App\Forms\UserForms\SignInFormFactory
+	- App\Forms\UserForms\SignUpFormFactory
+	- App\Forms\UserForms\UserFormFactory
+	- App\Model\PhoneNumberValidator
 	router: App\Router\RouterFactory::createRouter

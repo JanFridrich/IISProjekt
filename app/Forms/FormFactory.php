@@ -1,20 +1,15 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace App\Forms;
 
-use Nette;
-use Nette\Application\UI\Form;
-
-
 final class FormFactory
 {
-	use Nette\SmartObject;
+	use \Nette\SmartObject;
 
-	public function create(): Form
+	public function create(): \Nette\Application\UI\Form
 	{
-		$form = new Form;
+		$form = new \Nette\Application\UI\Form;
+
 		return $form;
 	}
 }

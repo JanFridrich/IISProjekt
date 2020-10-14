@@ -12,4 +12,24 @@ use Nette;
  */
 abstract class BasePresenter extends Nette\Application\UI\Presenter
 {
+	protected function startup()
+	{
+		parent::startup();
+		if ( ! $this->isAllowed() ) {
+			$this->redirect('Sign:in');
+		}
+	}
+
+	protected function beforeRender(): void
+	{
+		$this->template->user = $this->getUser();
+	}
+
+
+	protected function isAllowed(): bool
+	{
+		\Tracy\Debugger::barDump($this->getUser()->isInRole('pacient'));
+
+		return $this->getUser()->isLoggedIn();
+	}
 }

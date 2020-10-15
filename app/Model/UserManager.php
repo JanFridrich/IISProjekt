@@ -75,13 +75,48 @@ final class UserManager implements Nette\Security\IAuthenticator
 	 */
 	public function add(\stdClass $values): void
 	{
-		\Tracy\Debugger::barDump($values);
 		Nette\Utils\Validators::assert($values->email, 'email');
 		try {
 			$birthNumber = \str_replace('/', '', $values->rodne_cislo);
 			$this->database->table(self::TABLE_NAME)->insert([
 				self::COLUMN_LOGIN => $values->login,
 				self::COLUMN_PASSWORD_HASH => $this->passwords->hash($values->heslo),
+				self::COLUMN_EMAIL => $values->email,
+				self::COLUMN_NAME => $values->jmeno,
+				self::COLUMN_SURNAME => $values->prijmeni,
+				self::COLUMN_ROLE => self::DEFAULT_ROLE_VALUE,
+				self::COLUMN_BIRTH_NUMBER => $birthNumber,
+				self::COLUMN_PHONE => \preg_replace('/\s+/', '', $values->telefonni_cislo),
+			]);
+		} catch (Nette\Database\UniqueConstraintViolationException $e) {
+			throw new DuplicateNameException;
+		}
+	}
+
+
+	public function update(\stdClass $values, \Nette\Security\User $user): void
+	{
+		$login = $user->getIdentity()->data['login'];
+		if ($login !== $values->login) {
+			throw new ChangingLoginException();
+		}
+		$row = $this->database->table(self::TABLE_NAME)
+			->where(self::COLUMN_LOGIN, $values->login)
+			->fetch();
+
+		if ( ! $this->passwords->verify($values->oldPassword, $row[self::COLUMN_PASSWORD_HASH])) {
+			throw new Nette\Security\AuthenticationException('The password is incorrect.', self::INVALID_CREDENTIAL);
+		}
+		$password = $values->oldPassword;
+		if (trim($values->heslo) !== '') {
+			$password = $values->heslo;
+		}
+		\Tracy\Debugger::barDump($values);
+		Nette\Utils\Validators::assert($values->email, 'email');
+		try {
+			$birthNumber = \str_replace('/', '', $values->rodne_cislo);
+			$this->database->table(self::TABLE_NAME)->wherePrimary($values->login)->update([
+				self::COLUMN_PASSWORD_HASH => $this->passwords->hash($password),
 				self::COLUMN_EMAIL => $values->email,
 				self::COLUMN_NAME => $values->jmeno,
 				self::COLUMN_SURNAME => $values->prijmeni,

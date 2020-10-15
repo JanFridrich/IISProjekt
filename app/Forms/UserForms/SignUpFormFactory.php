@@ -44,6 +44,11 @@ final class SignUpFormFactory
 	public function create(callable $onSuccess, $caption): \Nette\Application\UI\Form
 	{
 		$form = $this->userFormFactory->create($onSuccess, $caption);
+		$password = $form->getComponent(\App\Model\UserManager::COLUMN_PASSWORD_HASH);
+		$password
+			->setRequired('Prosím vytvořte si heslo.')
+			->addRule($form::MIN_LENGTH, sprintf('alspoň %d znaků', UserFormFactory::PASSWORD_MIN_LENGTH), UserFormFactory::PASSWORD_MIN_LENGTH);
+
 		$form->onSuccess[] = function (\Nette\Application\UI\Form $form, \stdClass $values) use ($onSuccess): void {
 			try {
 				$this->userManager->add($values);

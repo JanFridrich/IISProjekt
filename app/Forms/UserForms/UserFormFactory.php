@@ -6,10 +6,9 @@ class UserFormFactory
 {
 	use \Nette\SmartObject;
 
-	private const PASSWORD_MIN_LENGTH = 7;
-	private const BIRTH_NUMBER_MIN_LENGTH = 9;
-	private const BIRTH_NUMBER_MAX_LENGTH = 11;
-	private const PHONE_NUMBER_LENGTH = 9;
+	public const PASSWORD_MIN_LENGTH = 7;
+	public const BIRTH_NUMBER_MIN_LENGTH = 9;
+	public const BIRTH_NUMBER_MAX_LENGTH = 11;
 
 	/**
 	 * @var \App\Forms\FormFactory
@@ -43,19 +42,16 @@ class UserFormFactory
 			->setRequired('Prosím vytvořte si přihlašovací login.');
 
 		$form->addPassword(\App\Model\UserManager::COLUMN_PASSWORD_HASH, 'Heslo:')
-			->setOption('description', sprintf('alspoň %d znaků', self::PASSWORD_MIN_LENGTH))
-			->setRequired('Prosím vytvořte si heslo.')
-			->addRule($form::MIN_LENGTH, sprintf('alspoň %d znaků', self::PASSWORD_MIN_LENGTH), self::PASSWORD_MIN_LENGTH);
+			->setOption('description', sprintf('alspoň %d znaků', self::PASSWORD_MIN_LENGTH));
 
 		$form->addPassword(\App\Model\UserManager::COLUMN_PASSWORD_HASH . '2', 'Heslo znovu:')
-			->setRequired('Napište heslo znovu.')
 			->addRule($form::EQUAL, 'Hesla se musí shodovat', $form[\App\Model\UserManager::COLUMN_PASSWORD_HASH]);
 
 		// nastavíme defaultní hodnoty pro testování
 		$form->addText(\App\Model\UserManager::COLUMN_PHONE, 'Telefonní číslo: +420')
 			->setRequired()
 			->setDefaultValue('999333444')
-			->addRule(\App\Model\PhoneNumberValidator::class.'::numberValidator', 'Pouze mezery a čísla mohou být součástí telefonního čísla');
+			->addRule(\App\Model\FormValidators::class . '::phoneNumberValidator', 'Pouze mezery a čísla mohou být součástí telefonního čísla');
 
 		$form->addEmail(\App\Model\UserManager::COLUMN_EMAIL, 'Email:')
 			->setRequired()
@@ -77,6 +73,43 @@ class UserFormFactory
 			->setDefaultValue('121212/2025');
 
 		$form->addSubmit('send', $caption);
+
+		return $form;
+	}
+
+
+	public function createSelfEdit(callable $onSuccess, \Nette\Security\User $user): \Nette\Application\UI\Form
+	{
+		$form = $this->create($onSuccess, 'Uložit');
+		$form->setDefaults($user->getIdentity()->data);
+
+		/** @var \Nette\Forms\Controls\TextInput $newPassword */
+		$newPassword = $form->getComponent(\App\Model\UserManager::COLUMN_PASSWORD_HASH);
+		$newPassword->setCaption('Nové heslo')
+			->setOption('description', 'Pouze pro změnu hesla');
+
+		$form->addPassword('oldPassword', 'Potvrzovací heslo')
+			->setOption('description', 'Uveďte aktuální heslo');
+		$form->onSuccess[] = function (\Nette\Application\UI\Form $form, \stdClass $values) use ($onSuccess, $user): void {
+			try {
+				$this->userManager->update($values, $user);
+				$user->logout();
+				$password = $values->oldPassword;
+				if (trim($values->heslo) !== '') {
+					$password = $values->heslo;
+				}
+				$user->login($values->login, $password);
+			} catch (\Nette\Security\AuthenticationException $e) {
+				$form['oldPassword']->addError('Zadejte správné heslo prosím');
+
+				return;
+			} catch (\App\Model\ChangingLoginException $e) {
+				$form[\App\Model\UserManager::COLUMN_LOGIN]->addError('Nemůžete si měnit login !');
+
+				return;
+			}
+			$onSuccess();
+		};
 
 		return $form;
 	}

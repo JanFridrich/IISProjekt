@@ -2,12 +2,13 @@
 
 namespace App\Model;
 
-class PhoneNumberValidator
+class FormValidators
 {
-	public static function numberValidator($item): bool
+	public static function phoneNumberValidator($item): bool
 	{
 		$number = \preg_replace('/\s+/', '', $item->value);
 
 		return \is_numeric($number);
 	}
+
 }

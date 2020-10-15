@@ -29,5 +29,5 @@ services:
 	- App\Forms\UserForms\SignInFormFactory
 	- App\Forms\UserForms\SignUpFormFactory
 	- App\Forms\UserForms\UserFormFactory
-	- App\Model\PhoneNumberValidator
+	- App\Model\FormValidators
 	router: App\Router\RouterFactory::createRouter

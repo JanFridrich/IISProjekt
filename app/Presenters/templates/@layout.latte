@@ -26,6 +26,7 @@
 		<div n:foreach="$flashes as $flash" n:class="alert, 'alert-' . $flash->type">{$flash->message}</div>
 		<header>
 			<a n:href="Homepage:">Úvod</a>
+			<a n:if="$user->isLoggedIn()" n:href="User:selfEdit">{$user->getIdentity()->data['login']}</a>
 			<a n:if="$user->isLoggedIn()" n:href="Sign:out">Odhlásit se</a>
 			<a n:if=" ! $user->isLoggedIn()" n:href="Sign:in">Přihlásit se</a>
 		</header>
